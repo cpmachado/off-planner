@@ -4,6 +4,7 @@ import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
+import 'leaflet/dist/leaflet.css';
 
 import App from './App.vue';
 import router from './router';
@@ -13,6 +14,7 @@ axios.defaults.baseURL = 'http://localhost:8000';
 Vue.prototype.$axios = axios;
 
 Vue.use(BootstrapVue);
+
 
 Vue.config.productionTip = false;
 

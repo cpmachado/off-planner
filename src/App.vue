@@ -22,7 +22,7 @@
         </b-collapse>
       </b-navbar>
     </div>
-    <b-container>
+    <b-container fluid>
       <router-view/>
     </b-container>
   </div>
