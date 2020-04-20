@@ -1,16 +1,12 @@
-# vue-boostrap-template-2020
-Ready to use template for FE application, using:
-- Vue
-- BootstrapVue
-- Axios for HTTP requests
+# off-planner
+Test project for leaflet, openrouteservice etc
 
-## Create a fork of this repository
+## This project depends on vue-bootstrap-template-2020
+In order to keep up to date with upstream:
 ```
-git clone git@github.com:niabb/vue-bootstrap-template-2020.git newRepo
-cd newRepo
-git remote set-url origin git@github.com:niabb/newRepo.git
-git remote add upstream git@github.com:niabb/vue-bootstrap-template-2020.git
-git push origin master
+git pull
+git remote add upstream git@github.com:niabb/vue-bootstrap-template-2020.git // If not done already
+git pull upstream master
 ```
 
 ## Project setup
