@@ -1,5 +1,5 @@
 <template>
-  <b-row>
+  <b-row class="h-100">
     <b-col>
       <p>current center: {{currentCenter.lat}}, {{currentCenter.lng}}</p>
       <p>current zoom: {{currentZoom}}</p>
@@ -15,15 +15,15 @@
         </li>
       </ul>
     </b-col>
-    <b-col>
-      <div style="height: 900px; width: 100%">
+    <b-col cols="10">
+      <div style="height: 100%; width: 100%">
 
         <l-map
             v-if="showMap"
             :zoom="zoom"
             :center="center"
             :options="mapOptions"
-            style="height: 80%"
+            style="height: 100%"
             @update:center="centerUpdate"
             @update:zoom="zoomUpdate"
             @click="handleMapClick"
@@ -135,7 +135,6 @@ export default {
 </script>
 
 <style>
-    @import "~leaflet/dist/leaflet.css";
-    @import "~vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css";
-
+  @import "~leaflet/dist/leaflet.css";
+  @import "~vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css";
 </style>
