@@ -115,7 +115,7 @@ export default {
         profile: 'foot-hiking',
         format: 'geojson',
         elevation: true,
-        extra_info: ['steepness', 'suitability', 'surface', 'waycategory', 'waytype', 'roadaccessrestrictions'],
+        extra_info: ['steepness', 'surface'],
       });
       if (result) {
         if (result.features && result.features[0] && result.features[0].properties) {
@@ -133,3 +133,9 @@ export default {
   },
 };
 </script>
+
+<style>
+    @import "~leaflet/dist/leaflet.css";
+    @import "~vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css";
+
+</style>
