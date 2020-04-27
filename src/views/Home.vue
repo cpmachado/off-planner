@@ -10,13 +10,15 @@
       <p>Distance: {{distance}} km</p>
       <p>Ascent: {{ascent}} m D+</p>
       <p>Descent: {{descent}}m D-</p>
+      <b-button @click="toGpx">Export as GPX</b-button>
+
       <!-- <ul>
         <li v-for="(coordinate, index) in coordinates" :key="index">
           {{coordinate}}
         </li>
       </ul> -->
     </b-col>
-    <b-col cols="10">
+    <b-col cols="11">
       <div style="height: 100%; width: 100%" v-on:keyup.ctrl.90="removeLastPoint">
 
         <l-map
@@ -76,6 +78,8 @@ const { latLng } = L;
 
 
 const openrouteservice = require('openrouteservice-js');
+const toGpx = require('togpx');
+const FileSaver = require('file-saver');
 const math = require('../helpers/math');
 
 const apiKey = '5b3ce3597851110001cf6248859a373add3948c98894f77ce8dbccaa';
@@ -273,6 +277,12 @@ export default {
         return result.geometry;
       }
       return [];
+    },
+    toGpx() {
+      const gpx = toGpx(this.geojson);
+      console.log(gpx);
+      const blob = new Blob([gpx]);
+      FileSaver.saveAs(blob, 'off-planner.gpx');
     },
   },
 
