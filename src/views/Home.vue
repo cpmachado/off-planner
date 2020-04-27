@@ -179,7 +179,8 @@ export default {
           coordinates: [lng, lat], skip: true, altitude: alt2, diff: alt2 - alt1,
         },
       );
-      await this.directions();
+      // await this.directions();
+      this.addPointToGeoJson([lng, lat, alt2]);
       return null;
     },
     async removeLastPoint() {
@@ -200,7 +201,7 @@ export default {
           profile: 'foot-hiking',
           format: 'geojson',
           elevation: true,
-          extra_info: ['steepness', 'surface'],
+          extra_info: ['steepness'],
         };
         if (this.skipSegments.length > 0) {
           options.skip_segments = this.skipSegments;
@@ -283,6 +284,16 @@ export default {
       console.log(gpx);
       const blob = new Blob([gpx]);
       FileSaver.saveAs(blob, 'off-planner.gpx');
+    },
+    addPointToGeoJson(point) {
+      if (this.geojson.features && this.geojson.features[0]) {
+        const feature = this.geojson.features[0];
+        if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
+          const { coordinates } = feature.geometry;
+          coordinates.push(point);
+        }
+      }
+      // TODO: add point to extras steepness
     },
   },
 
