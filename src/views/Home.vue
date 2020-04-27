@@ -3,21 +3,21 @@
     <b-col>
       <!-- <p>current center: {{currentCenter.lat}}, {{currentCenter.lng}}</p> -->
       <!-- <p>current zoom: {{currentZoom}}</p> -->
-      <p>clicked: {{clicked.lat}}, {{clicked.lng}}</p>
+      <!-- <p>clicked: {{clicked.lat}}, {{clicked.lng}}</p>
       <b-button @click="directions">Directions</b-button>
-      <b-button @click="removeLastPoint">Remove last point</b-button>
+      <b-button @click="removeLastPoint">Remove last point</b-button> -->
       <!-- <p>Duration: {{duration}} min</p> -->
       <p>Distance: {{distance}} km</p>
       <p>Ascent: {{ascent}} m D+</p>
       <p>Descent: {{descent}}m D-</p>
-      <ul>
+      <!-- <ul>
         <li v-for="(coordinate, index) in coordinates" :key="index">
           {{coordinate}}
         </li>
-      </ul>
+      </ul> -->
     </b-col>
     <b-col cols="10">
-      <div style="height: 100%; width: 100%">
+      <div style="height: 100%; width: 100%" v-on:keyup.ctrl.90="removeLastPoint">
 
         <l-map
             v-if="showMap"
@@ -30,18 +30,29 @@
             @click.left="handleMapClick"
             @click.right="handleMapRightClick"
           >
+            <l-control-layers position="topright"  ></l-control-layers>
+
             <l-heightgraph
               v-if="geojson"
               :data="geojson"
               :options="{ width: 800, position: 'bottomleft'}"
               parser="ors"
               :expand="expand"
+              :debug="true"
               >
             </l-heightgraph>
-            <l-tile-layer
+            <!-- <l-tile-layer
               :url="url"
               :attribution="attribution"
-            />
+            /> -->
+            <l-tile-layer
+              v-for="tileProvider in tileProviders"
+              :key="tileProvider.name"
+              :name="tileProvider.name"
+              :visible="tileProvider.visible"
+              :url="tileProvider.url"
+              :attribution="tileProvider.attribution"
+              layer-type="base"/>
             <l-geo-json
               v-if="geojson"
               :geojson="geojson"
@@ -56,7 +67,7 @@
 import L from 'leaflet';
 
 import {
-  LMap, LTileLayer, LGeoJson,
+  LMap, LTileLayer, LGeoJson, LControlLayers,
 } from 'vue2-leaflet';
 import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
 
@@ -76,16 +87,30 @@ export default {
     LTileLayer,
     LGeoJson,
     LHeightgraph,
+    LControlLayers,
   },
   created() {
   },
   data() {
     return {
+      tileProviders: [
+        {
+          name: 'OpenTopoMap',
+          visible: false,
+          url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+          attribution:
+            'Map data: &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+        },
+        {
+          name: 'Thunderforest Outdoors',
+          visible: true,
+          attribution:
+            '&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+          url: 'https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=6b982c516ec2414c8add22d504c1ebff',
+        },
+      ],
       zoom: 14,
       center: latLng(42.941218896491655, -0.3136682510375977),
-      url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      attribution:
-        '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
       currentZoom: 14,
       currentCenter: latLng(42.941218896491655, -0.3136682510375977),
       mapOptions: {
@@ -134,15 +159,24 @@ export default {
       await this.directions();
     },
     async handleMapRightClick(event) {
+      if (this.waypoints.length === 0) {
+        return null;
+      }
       this.clicked = event.latlng;
       const lng = math.round(event.latlng.lng, 6);
       const lat = math.round(event.latlng.lat, 6);
-
-      const altitude = await this.getAltitude([lng, lat]);
+      // const altitude = await this.getAltitude([lng, lat]);
+      const lineCoords = await this.getLineAltitude(
+        [this.coordinates[this.coordinates.length - 1], [lng, lat]],
+      );
+      const [[,, alt1], [,, alt2]] = lineCoords;
       this.waypoints.push(
-        { coordinates: [lng, lat], skip: true, altitude },
+        {
+          coordinates: [lng, lat], skip: true, altitude: alt2, diff: alt2 - alt1,
+        },
       );
       await this.directions();
+      return null;
     },
     async removeLastPoint() {
       this.waypoints.pop();
@@ -175,15 +209,15 @@ export default {
             if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
               const { coordinates } = feature.geometry;
               const skippedPoints = this.waypoints.filter((e) => e.skip && e.altitude);
-              console.log(skippedPoints);
-              console.log(coordinates);
+              // console.log(skippedPoints);
+              // console.log(coordinates);
 
               skippedPoints.forEach((skippedPoint) => {
                 const foundCoord = coordinates.find(
                   (coordinate) => coordinate[0] === skippedPoint.coordinates[0]
                   && coordinate[1] === skippedPoint.coordinates[1],
                 );
-                console.log(foundCoord);
+                // console.log(foundCoord);
                 if (foundCoord) {
                   foundCoord[2] = skippedPoint.altitude;
                 }
@@ -197,6 +231,14 @@ export default {
                 this.distance = Math.round(prop.summary.distance / 10) / 100;
                 // this.duration = Math.round(prop.summary.duration / 60);
               }
+              const skippedPoints = this.waypoints.filter((e) => e.skip && e.diff);
+              skippedPoints.forEach((skippedPoint) => {
+                if (skippedPoint.diff > 0) {
+                  this.ascent += skippedPoint.diff;
+                } else {
+                  this.descent -= skippedPoint.diff;
+                }
+              });
             }
           }
           this.geojson = result;
@@ -218,11 +260,34 @@ export default {
       }
       return 0;
     },
+    async getLineAltitude(coordinates) {
+      const Elevation = new openrouteservice.Elevation({
+        api_key: apiKey,
+      });
+      const result = await Elevation.lineElevation({
+        format_in: 'polyline',
+        format_out: 'polyline',
+        geometry: coordinates,
+      });
+      if (result && result.geometry) {
+        return result.geometry;
+      }
+      return [];
+    },
   },
+
+
 };
 </script>
 
 <style>
   @import "~leaflet/dist/leaflet.css";
   @import "../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css";
+  .leaflet-grab {
+    cursor: auto;
+  }
+
+  .leaflet-dragging .leaflet-grab{
+    cursor: move;
+  }
 </style>
