@@ -59,6 +59,15 @@
               v-if="geojson"
               :geojson="geojson"
             />
+            <l-layer-group ref="features">
+              <l-marker
+                v-for="(coordinate, index) in coordinates"
+                :lat-lng="[coordinate[1], coordinate[0]]" :key="index"
+                :icon="getIcon(index)"
+              >
+
+              </l-marker>
+            </l-layer-group>
           </l-map>
       </div>
       </b-col>
@@ -69,13 +78,16 @@
 import L from 'leaflet';
 
 import {
-  LMap, LTileLayer, LGeoJson, LControlLayers,
+  LMap, LTileLayer, LGeoJson, LControlLayers, LLayerGroup, LMarker,
 } from 'vue2-leaflet';
+import startIcon from '@/assets/markers/start.png';
+import finishIcon from '@/assets/markers/finish.png';
+import circleIcon from '@/assets/markers/circle.png';
+
 import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
 
 
 const { latLng } = L;
-
 
 const openrouteservice = require('openrouteservice-js');
 const toGpx = require('togpx');
@@ -83,6 +95,7 @@ const FileSaver = require('file-saver');
 const math = require('../helpers/math');
 
 const apiKey = '5b3ce3597851110001cf6248859a373add3948c98894f77ce8dbccaa';
+
 
 export default {
   name: 'Home',
@@ -92,6 +105,8 @@ export default {
     LGeoJson,
     LHeightgraph,
     LControlLayers,
+    LLayerGroup,
+    LMarker,
   },
   created() {
   },
@@ -132,6 +147,19 @@ export default {
       ascent: null,
       descent: null,
       expand: true,
+      startIcon: L.icon({
+        iconUrl: startIcon,
+        iconAnchor: [4, 30],
+
+      }),
+      finishIcon: L.icon({
+        iconUrl: finishIcon,
+        iconAnchor: [4, 32],
+      }),
+      circleIcon: L.icon({
+        iconUrl: circleIcon,
+        iconAnchor: [8, 8],
+      }),
     };
   },
   computed: {
@@ -294,6 +322,15 @@ export default {
         }
       }
       // TODO: add point to extras steepness
+    },
+    getIcon(index) {
+      if (index === 0) {
+        return this.startIcon;
+      }
+      if (index === this.coordinates.length - 1) {
+        return this.finishIcon;
+      }
+      return this.circleIcon;
     },
   },
 
