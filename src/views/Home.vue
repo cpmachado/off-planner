@@ -355,7 +355,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
   @import "~leaflet/dist/leaflet.css";
   @import "../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css";
   .leaflet-grab {
@@ -367,7 +367,7 @@ export default {
   }
 
   .transparent-card {
-    opacity: 75%;
+    opacity: 0.75;
   }
 
   .no-padding {
