@@ -52,7 +52,7 @@
             </l-layer-group>
 
             <l-control position="topright" >
-              <b-card class="transparent">
+              <b-card class="transparent-card">
                 <p>
                   Distance: {{distance}} km<br/>
                   Ascent: {{ascent}} m D+<br/>
@@ -366,7 +366,7 @@ export default {
     cursor: move;
   }
 
-  .transparent {
+  .transparent-card {
     opacity: 75%;
   }
 
