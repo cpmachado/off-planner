@@ -1,24 +1,6 @@
 <template>
   <b-row class="h-100">
-    <b-col>
-      <!-- <p>current center: {{currentCenter.lat}}, {{currentCenter.lng}}</p> -->
-      <!-- <p>current zoom: {{currentZoom}}</p> -->
-      <!-- <p>clicked: {{clicked.lat}}, {{clicked.lng}}</p>
-      <b-button @click="directions">Directions</b-button>
-      <b-button @click="removeLastPoint">Remove last point</b-button> -->
-      <!-- <p>Duration: {{duration}} min</p> -->
-      <p>Distance: {{distance}} km</p>
-      <p>Ascent: {{ascent}} m D+</p>
-      <p>Descent: {{descent}}m D-</p>
-      <b-button @click="toGpx">Export as GPX</b-button>
-
-      <!-- <ul>
-        <li v-for="(coordinate, index) in coordinates" :key="index">
-          {{coordinate}}
-        </li>
-      </ul> -->
-    </b-col>
-    <b-col cols="11">
+    <b-col class="no-padding">
       <div style="height: 100%; width: 100%" v-on:keyup.ctrl.90="removeLastPoint">
 
         <l-map
@@ -68,6 +50,29 @@
 
               </l-marker>
             </l-layer-group>
+
+            <l-control position="topright" >
+              <b-card class="transparent">
+                <p>
+                  Distance: {{distance}} km<br/>
+                  Ascent: {{ascent}} m D+<br/>
+                  Descent: {{descent}}m D-
+                </p>
+
+                <b-button size="sm" @click="toGpx">Export as GPX</b-button><br/>
+                <b-button size="sm" @click="toJson">Export as JSON</b-button><br/><br/>
+                Import from JSON:<br/>
+                <b-form-file id="file-small" size="sm" accept=".json"
+                  placeholder="Choose a file or drop it here..."
+                  drop-placeholder="Drop file here..."
+                  v-model="file"
+                  @input="fromJson"
+                >
+                </b-form-file>
+
+              </b-card>
+
+            </l-control>
           </l-map>
       </div>
       </b-col>
@@ -78,7 +83,7 @@
 import L from 'leaflet';
 
 import {
-  LMap, LTileLayer, LGeoJson, LControlLayers, LLayerGroup, LMarker,
+  LMap, LTileLayer, LGeoJson, LControlLayers, LLayerGroup, LMarker, LControl,
 } from 'vue2-leaflet';
 import startIcon from '@/assets/markers/start.png';
 import finishIcon from '@/assets/markers/finish.png';
@@ -107,6 +112,7 @@ export default {
     LControlLayers,
     LLayerGroup,
     LMarker,
+    LControl,
   },
   created() {
   },
@@ -160,6 +166,7 @@ export default {
         iconUrl: circleIcon,
         iconAnchor: [8, 8],
       }),
+      file: null,
     };
   },
   computed: {
@@ -309,7 +316,6 @@ export default {
     },
     toGpx() {
       const gpx = toGpx(this.geojson);
-      console.log(gpx);
       const blob = new Blob([gpx]);
       FileSaver.saveAs(blob, 'off-planner.gpx');
     },
@@ -332,6 +338,17 @@ export default {
       }
       return this.circleIcon;
     },
+    toJson() {
+      const json = JSON.stringify(this.waypoints);
+      const blob = new Blob([json]);
+      FileSaver.saveAs(blob, 'off-planner.json');
+    },
+    async fromJson() {
+      const fileString = await this.file.text();
+      const fileJson = JSON.parse(fileString);
+      this.waypoints = fileJson;
+      await this.directions();
+    },
   },
 
 
@@ -347,5 +364,13 @@ export default {
 
   .leaflet-dragging .leaflet-grab{
     cursor: move;
+  }
+
+  .transparent {
+    opacity: 75%;
+  }
+
+  .no-padding {
+    padding: 0px;
   }
 </style>
