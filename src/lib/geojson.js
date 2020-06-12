@@ -48,7 +48,9 @@ export default function mergeGeoJsons(geoJson1, geoJson2) {
   const mergedDistance = properties1.summary.distance + properties2.summary.distance;
 
 
-  const mergedGeoJson = updateGeoJson(geoJson1, mergedGeometry, mergedAscent, mergedDescent, mergedDistance);
+  const mergedGeoJson = updateGeoJson(
+    geoJson1, mergedGeometry, mergedAscent, mergedDescent, mergedDistance,
+  );
 
   return mergedGeoJson;
 }
