@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import BootstrapVue from 'bootstrap-vue';
+import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue';
 import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -14,6 +14,7 @@ axios.defaults.baseURL = 'http://localhost:8000';
 Vue.prototype.$axios = axios;
 
 Vue.use(BootstrapVue);
+Vue.use(BootstrapVueIcons);
 
 
 Vue.config.productionTip = false;

@@ -50,28 +50,38 @@
 
               </l-marker>
             </l-layer-group>
-
             <l-control position="topright" >
-              <b-card class="transparent-card">
-                <p>
-                  Distance: {{distance}} km<br/>
-                  Ascent: {{ascent}} m D+<br/>
-                  Descent: {{descent}}m D-
-                </p>
+              <b-button size="sm" @click="removeLastPoint">
+                <b-icon icon="arrow-counterclockwise" aria-hidden="true">
+                </b-icon>
+              </b-button>
+            </l-control>
+            <l-control position="topright" >
+              <b-button size="sm" v-b-toggle.collapse-1>
+                <b-icon icon="gear-fill" aria-hidden="true">
+                </b-icon>
+              </b-button>
+              <b-collapse id="collapse-1" class="mt-2">
+                <b-card class="transparent-card">
+                  <p>
+                    Distance: {{distance}} km<br/>
+                    Ascent: {{ascent}} m D+<br/>
+                    Descent: {{descent}}m D-
+                  </p>
 
-                <b-button size="sm" @click="toGpx">Export as GPX</b-button><br/>
-                <b-button size="sm" @click="toJson">Export as JSON</b-button><br/><br/>
-                Import from JSON:<br/>
-                <b-form-file id="file-small" size="sm" accept=".json"
-                  placeholder="Choose a file or drop it here..."
-                  drop-placeholder="Drop file here..."
-                  v-model="file"
-                  @input="fromJson"
-                >
-                </b-form-file>
+                  <b-button size="sm" @click="toGpx">Export as GPX</b-button><br/>
+                  <b-button size="sm" @click="toJson">Export as JSON</b-button><br/><br/>
+                  Import from JSON:<br/>
+                  <b-form-file id="file-small" size="sm" accept=".json"
+                    placeholder="Choose a file or drop it here..."
+                    drop-placeholder="Drop file here..."
+                    v-model="file"
+                    @input="fromJson"
+                  >
+                  </b-form-file>
 
-              </b-card>
-
+                </b-card>
+              </b-collapse>
             </l-control>
           </l-map>
       </div>
