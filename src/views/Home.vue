@@ -19,9 +19,8 @@
             <l-heightgraph
               v-if="geojson"
               :data="geojson"
-              :options="{ width: 800, position: 'bottomleft'}"
+              :options="{ width: 800, position: 'bottomleft', expand: true}"
               parser="ors"
-              :expand="expand"
               :debug="true"
               >
             </l-heightgraph>
@@ -162,7 +161,6 @@ export default {
       distance: null,
       ascent: null,
       descent: null,
-      expand: true,
       startIcon: L.icon({
         iconUrl: startIcon,
         iconAnchor: [4, 30],
