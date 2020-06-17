@@ -17,7 +17,7 @@
             <l-control-layers position="topright"  ></l-control-layers>
 
             <l-heightgraph
-              v-if="geojson"
+              v-if="geojson && geojson.features[0].geometry.coordinates.length > 1"
               :data="geojson"
               :options="{ width: 800, position: 'bottomleft', expand: true}"
               parser="ors"
@@ -97,6 +97,7 @@ import {
 import startIcon from '@/assets/markers/start.png';
 import finishIcon from '@/assets/markers/finish.png';
 import circleIcon from '@/assets/markers/circle.png';
+import { emptyGeoJson, addCoordinatesToGeoJson } from '@/lib/geojson';
 
 import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
 
@@ -124,6 +125,9 @@ export default {
     LControl,
   },
   created() {
+    // this.geojson = addCoordinatesToGeoJson(
+    //   this.geojson, [[-0.331652, 42.957277, 1363.5], [-0.331005, 42.957646, 1364]],
+    // );
   },
   data() {
     return {
@@ -151,8 +155,7 @@ export default {
         zoomSnap: 0.5,
       },
       showMap: true,
-      geojson: null,
-      clicked: {},
+      geojson: emptyGeoJson(),
       waypoints: [
         // [-0.332937240600586, 42.958746699681065],
         // [-0.308218002319336, 42.92720562953708],
@@ -181,6 +184,18 @@ export default {
     coordinates() {
       return this.waypoints.map((e) => e.coordinates);
     },
+    segments() {
+      const segments = [];
+
+      if (this.waypoints.length > 0) {
+        this.waypoints.slice(0, -1).forEach((waypoint) => {
+          segments.push(...waypoint.segments.slice(0, -1));
+        });
+        const lastWaypoint = this.waypoints[this.waypoints.length - 1];
+        segments.push(...lastWaypoint.segments);
+      }
+      return segments;
+    },
     skipSegments() {
       const skip = [];
       let i = 0;
@@ -201,29 +216,55 @@ export default {
       this.currentCenter = center;
     },
     async handleMapClick(event) {
-      this.clicked = event.latlng;
-      this.waypoints.push({ coordinates: [event.latlng.lng, event.latlng.lat], skip: false });
-      await this.directions();
-    },
-    async handleMapRightClick(event) {
-      if (this.waypoints.length === 0) {
-        return null;
-      }
-      this.clicked = event.latlng;
       const lng = math.round(event.latlng.lng, 6);
       const lat = math.round(event.latlng.lat, 6);
-      // const altitude = await this.getAltitude([lng, lat]);
-      const lineCoords = await this.getLineAltitude(
-        [this.coordinates[this.coordinates.length - 1], [lng, lat]],
-      );
-      const [[,, alt1], [,, alt2]] = lineCoords;
+      const coordinates = [lng, lat];
+      let altitude = 0;
+      const segments = [];
+      if (this.waypoints.length === 0) {
+        altitude = await this.getAltitude([lng, lat]);
+        segments.push([lng, lat, altitude]);
+      } else {
+        const directionSegments = await this.getSegmentsFor2pointsDirection(
+          this.waypoints[this.waypoints.length - 1].coordinates, coordinates,
+        );
+        segments.push(...directionSegments);
+      }
       this.waypoints.push(
         {
-          coordinates: [lng, lat], skip: true, altitude: alt2, diff: alt2 - alt1,
+          coordinates, altitude, skip: false, segments,
+        },
+      );
+
+      this.geojson = addCoordinatesToGeoJson(
+        this.geojson, segments,
+      );
+    },
+    async handleMapRightClick(event) {
+      const lng = math.round(event.latlng.lng, 6);
+      const lat = math.round(event.latlng.lat, 6);
+      let diff = 0;
+      let altitude = 0;
+      if (this.waypoints.length === 0) {
+        altitude = await this.getAltitude([lng, lat]);
+      } else {
+        const lineCoords = await this.getLineAltitude(
+          [this.coordinates[this.coordinates.length - 1], [lng, lat]],
+        );
+        const [[,, alt1], [,, alt2]] = lineCoords;
+        diff = alt2 - alt1;
+        altitude = alt2;
+      }
+      this.waypoints.push(
+        {
+          coordinates: [lng, lat], skip: true, altitude, diff,
         },
       );
       // await this.directions();
-      this.addPointToGeoJson([lng, lat, alt2]);
+      // this.addPointToGeoJson([lng, lat, alt2]);
+      this.geojson = addCoordinatesToGeoJson(
+        this.geojson, [[lng, lat, altitude]],
+      );
       return null;
     },
     async removeLastPoint() {
@@ -292,6 +333,27 @@ export default {
           this.geojson = result;
         }
       }
+    },
+    async getSegmentsFor2pointsDirection(point1, point2) {
+      const Directions = new openrouteservice.Directions({
+        api_key: apiKey,
+      });
+      const options = {
+        coordinates: [point1, point2],
+        profile: 'foot-hiking',
+        format: 'geojson',
+        elevation: true,
+        extra_info: ['steepness'],
+      };
+      const result = await Directions.calculate(options);
+      if (result && result.features && result.features[0]) {
+        const feature = result.features[0];
+        if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
+          const { coordinates } = feature.geometry;
+          return coordinates;
+        }
+      }
+      return [];
     },
     async getAltitude(coordinates) {
       const Elevation = new openrouteservice.Elevation({

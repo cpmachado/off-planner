@@ -33,7 +33,75 @@ function updateGeoJson(geoJson, coordinates, ascent, descent, distance) {
   return updatedGeoJson;
 }
 
-export default function mergeGeoJsons(geoJson1, geoJson2) {
+function emptyGeoJson() {
+  return {
+    type: 'FeatureCollection',
+    features: [
+      {
+        bbox: [
+          // -0.993317, 42.421439, 34.7, 1.481704, 44.119525, 2080.59,
+        ],
+
+        type: 'Feature',
+        properties: {
+          ascent: 0,
+          descent: 0,
+          segments: [
+          ],
+          extras: {
+            steepness: {
+              values: [
+                // [0, 1, 7],
+              ],
+              summary: [
+                {
+                  value: 0,
+                  distance: 0,
+                  amount: 0,
+                },
+              ],
+            },
+          },
+          summary: {
+            distance: 0,
+            duration: 0,
+          },
+          way_points: [
+          ],
+        },
+        geometry: {
+          coordinates: [
+            // [-0.331652, 42.957277, 1363.5],
+            // [-0.331005, 42.957646, 1364],
+          ],
+          type: 'LineString',
+        },
+      },
+    ],
+    bbox: [
+    ],
+    metadata: {
+    },
+  };
+}
+
+function addCoordinatesToGeoJson(geoJson, coordinates) {
+  const modifiedGeoJson = geoJson;
+  const feature = modifiedGeoJson.features[0];
+
+  let nextIndex = feature.geometry.coordinates.length;
+  coordinates.forEach((coordinate) => {
+    feature.geometry.coordinates.push(coordinate);
+    if (nextIndex > 0) {
+      const steepness = 9; // TODO: calculate
+      feature.properties.extras.steepness.values.push([nextIndex - 1, nextIndex, steepness]);
+    }
+    nextIndex += 1;
+  });
+  return modifiedGeoJson;
+}
+
+function mergeGeoJsons(geoJson1, geoJson2) {
   const geometry1 = getGeometryCoordinates(geoJson1);
   const geometry2 = getGeometryCoordinates(geoJson2);
   // const mergedGeoJson = replaceGeometryCoordinates(
@@ -54,3 +122,5 @@ export default function mergeGeoJsons(geoJson1, geoJson2) {
 
   return mergedGeoJson;
 }
+
+export { emptyGeoJson, addCoordinatesToGeoJson, mergeGeoJsons };

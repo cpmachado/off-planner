@@ -1,0 +1,44 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "bbox": [
+      ],
+      "type": "Feature",
+      "properties": {
+        "ascent": 0,
+        "descent": 0,
+        "segments": [
+        ],
+        "extras": {
+          "steepness": {
+            "values": [
+            ],
+            "summary": [
+              {
+                "value": 0,
+                "distance": 0,
+                "amount": 0
+              }
+            ]
+          }
+        },
+        "summary": {
+          "distance": 0,
+          "duration": 0
+        },
+        "way_points": [
+        ]
+      },
+      "geometry": {
+        "coordinates": [
+        ],
+        "type": "LineString"
+      }
+    }
+  ],
+  "bbox": [
+  ],
+  "metadata": {
+  }
+}
