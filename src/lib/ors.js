@@ -10,7 +10,6 @@ async function getCoordinatesFromLocation(location) {
     const result = await Geocode.geocode({
       text: location,
     });
-    console.log(result);
     if (
       result && result.features && result.features[0] && result.features[0].geometry
       && result.features[0].geometry.coordinates
@@ -19,7 +18,7 @@ async function getCoordinatesFromLocation(location) {
       return { longitude, latitude };
     }
   } catch (error) {
-    console.log('Error in location search', error);
+    // console.log('Error in location search', error);
   }
   return null;
 }
