@@ -9,8 +9,6 @@
             :center="center"
             :options="mapOptions"
             style="height: 100%"
-            @update:center="centerUpdate"
-            @update:zoom="zoomUpdate"
             @click.left="handleMapClick"
             @click.right="handleMapRightClick"
           >
@@ -49,6 +47,15 @@
 
               </l-marker>
             </l-layer-group>
+            <l-control position="topleft" >
+              <b-input-group size="sm" class="mb-2">
+                <b-input-group-append is-text>
+                  <b-icon icon="search" @click="focusOnLocation"></b-icon>
+                </b-input-group-append>
+                <b-form-input v-model="locationSearch" type="search" placeholder="Location"
+                  @keyup.enter="focusOnLocation"></b-form-input>
+              </b-input-group>
+            </l-control>
             <l-control position="topright" >
               <b-button size="sm" @click="removeLastPoint">
                 <b-icon icon="arrow-counterclockwise" aria-hidden="true">
@@ -110,6 +117,9 @@ import startIcon from '@/assets/markers/start.png';
 import finishIcon from '@/assets/markers/finish.png';
 import circleIcon from '@/assets/markers/circle.png';
 import { emptyGeoJson, addCoordinatesToGeoJson } from '@/lib/geojson';
+import getCoordinatesFromLocation from '@/lib/ors';
+
+import config from '../config.json';
 
 import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
 
@@ -119,8 +129,6 @@ const openrouteservice = require('openrouteservice-js');
 const toGpx = require('togpx');
 const FileSaver = require('file-saver');
 const math = require('../helpers/math');
-
-const apiKey = '5b3ce3597851110001cf6248859a373add3948c98894f77ce8dbccaa';
 
 export default {
   name: 'Home',
@@ -154,13 +162,11 @@ export default {
           visible: true,
           attribution:
             '&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-          url: 'https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=6b982c516ec2414c8add22d504c1ebff',
+          url: `https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=${config.thunderforestApiKey}`,
         },
       ],
       zoom: 14,
       center: latLng(42.941218896491655, -0.3136682510375977),
-      currentZoom: 14,
-      currentCenter: latLng(42.941218896491655, -0.3136682510375977),
       mapOptions: {
         zoomSnap: 0.5,
       },
@@ -189,6 +195,7 @@ export default {
       }),
       file: null,
       profile: 'foot-hiking',
+      locationSearch: '',
     };
   },
   computed: {
@@ -220,12 +227,12 @@ export default {
     },
   },
   methods: {
-    zoomUpdate(zoom) {
-      this.currentZoom = zoom;
-    },
-    centerUpdate(center) {
-      this.currentCenter = center;
-    },
+    // zoomUpdate(zoom) {
+    //   this.currentZoom = zoom;
+    // },
+    // centerUpdate(center) {
+    //   this.currentCenter = center;
+    // },
     async handleMapClick(event) {
       const lng = math.round(event.latlng.lng, 6);
       const lat = math.round(event.latlng.lat, 6);
@@ -289,7 +296,7 @@ export default {
     async directions() {
       if (this.waypoints.length >= 2) {
         const Directions = new openrouteservice.Directions({
-          api_key: apiKey,
+          api_key: config.orsApiKey,
         });
         const options = {
           coordinates: this.coordinates,
@@ -347,7 +354,7 @@ export default {
     },
     async getSegmentsFor2pointsDirection(point1, point2) {
       const Directions = new openrouteservice.Directions({
-        api_key: apiKey,
+        api_key: config.orsApiKey,
       });
       const options = {
         coordinates: [point1, point2],
@@ -368,7 +375,7 @@ export default {
     },
     async getAltitude(coordinates) {
       const Elevation = new openrouteservice.Elevation({
-        api_key: apiKey,
+        api_key: config.orsApiKey,
       });
       const result = await Elevation.pointElevation({
         format_in: 'point',
@@ -383,7 +390,7 @@ export default {
     },
     async getLineAltitude(coordinates) {
       const Elevation = new openrouteservice.Elevation({
-        api_key: apiKey,
+        api_key: config.orsApiKey,
       });
       const result = await Elevation.lineElevation({
         format_in: 'polyline',
@@ -429,6 +436,12 @@ export default {
       const fileJson = JSON.parse(fileString);
       this.waypoints = fileJson;
       await this.directions();
+    },
+    async focusOnLocation() {
+      const { longitude, latitude } = await getCoordinatesFromLocation(this.locationSearch);
+      if (longitude && latitude) {
+        this.center = latLng(latitude, longitude);
+      }
     },
   },
 
