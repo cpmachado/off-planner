@@ -56,6 +56,18 @@
               </b-button>
             </l-control>
             <l-control position="topright" >
+              <b-button size="sm" @click="profile='foot-hiking'"
+                :pressed="profile==='foot-hiking'">
+                <b-icon icon="people" aria-hidden="true">
+                </b-icon>
+              </b-button>
+              <b-button size="sm" @click="profile='driving-car'"
+                :pressed="profile==='driving-car'">
+                <b-icon icon="bicycle" aria-hidden="true">
+                </b-icon>
+              </b-button>
+            </l-control>
+            <l-control position="topright" >
               <b-button size="sm" v-b-toggle.collapse-1>
                 <b-icon icon="gear-fill" aria-hidden="true">
                 </b-icon>
@@ -176,6 +188,7 @@ export default {
         iconAnchor: [8, 8],
       }),
       file: null,
+      profile: 'foot-hiking',
     };
   },
   computed: {
@@ -280,7 +293,7 @@ export default {
         });
         const options = {
           coordinates: this.coordinates,
-          profile: 'foot-hiking',
+          profile: this.profile,
           format: 'geojson',
           elevation: true,
           extra_info: ['steepness'],
@@ -338,7 +351,7 @@ export default {
       });
       const options = {
         coordinates: [point1, point2],
-        profile: 'foot-hiking',
+        profile: this.profile,
         format: 'geojson',
         elevation: true,
         extra_info: ['steepness'],
