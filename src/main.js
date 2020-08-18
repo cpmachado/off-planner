@@ -16,7 +16,6 @@ Vue.prototype.$axios = axios;
 Vue.use(BootstrapVue);
 Vue.use(BootstrapVueIcons);
 
-
 Vue.config.productionTip = false;
 
 new Vue({

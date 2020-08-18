@@ -101,7 +101,6 @@ import { emptyGeoJson, addCoordinatesToGeoJson } from '@/lib/geojson';
 
 import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
 
-
 const { latLng } = L;
 
 const openrouteservice = require('openrouteservice-js');
@@ -110,7 +109,6 @@ const FileSaver = require('file-saver');
 const math = require('../helpers/math');
 
 const apiKey = '5b3ce3597851110001cf6248859a373add3948c98894f77ce8dbccaa';
-
 
 export default {
   name: 'Home',
@@ -420,7 +418,6 @@ export default {
       await this.directions();
     },
   },
-
 
 };
 </script>

@@ -2,7 +2,6 @@
  * Utility module to work with geoJson objects containing only one feature
  */
 
-
 function getGeometryCoordinates(geoJson) {
   if (
     geoJson && Array.isArray(geoJson.features) && geoJson.features[0]
@@ -114,7 +113,6 @@ function mergeGeoJsons(geoJson1, geoJson2) {
   const mergedAscent = properties1.ascent + properties2.ascent;
   const mergedDescent = properties1.descent + properties2.descent;
   const mergedDistance = properties1.summary.distance + properties2.summary.distance;
-
 
   const mergedGeoJson = updateGeoJson(
     geoJson1, mergedGeometry, mergedAscent, mergedDescent, mergedDistance,
