@@ -15,7 +15,8 @@
             <l-control-layers position="topright"  ></l-control-layers>
 
             <l-heightgraph
-              v-if="geojson && geojson.features[0].geometry.coordinates.length > 1"
+              v-if="geojson && geojson.features[0].geometry.coordinates.length > 1
+                && enableHeighGraph"
               :data="geojson"
               :options="{ width: 800, position: 'bottomleft', expand: true}"
               parser="ors"
@@ -196,6 +197,7 @@ export default {
       file: null,
       profile: 'foot-hiking',
       locationSearch: '',
+      enableHeighGraph: false,
     };
   },
   computed: {
