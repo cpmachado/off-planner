@@ -14,7 +14,7 @@
           >
             <l-control-layers position="topright"  ></l-control-layers>
 
-            <l-heightgraph
+            <!-- <l-heightgraph
               v-if="geojson && geojson.features[0].geometry.coordinates.length > 1
                 && enableHeighGraph"
               :data="geojson"
@@ -22,7 +22,7 @@
               parser="ors"
               :debug="true"
               >
-            </l-heightgraph>
+            </l-heightgraph> -->
             <!-- <l-tile-layer
               :url="url"
               :attribution="attribution"
@@ -118,15 +118,16 @@ import startIcon from '@/assets/markers/start.png';
 import finishIcon from '@/assets/markers/finish.png';
 import circleIcon from '@/assets/markers/circle.png';
 import { emptyGeoJson, addCoordinatesToGeoJson } from '@/lib/geojson';
-import getCoordinatesFromLocation from '@/lib/ors';
+import {
+  getCoordinatesFromLocation, getSegmentsFor2pointsDirection, getAltitude, getLineAltitude,
+} from '@/lib/ors';
 
 import config from '../config.json';
 
-import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
+// import LHeightgraph from '../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.umd';
 
 const { latLng } = L;
 
-const openrouteservice = require('openrouteservice-js');
 const toGpx = require('togpx');
 const FileSaver = require('file-saver');
 const math = require('../helpers/math');
@@ -137,7 +138,7 @@ export default {
     LMap,
     LTileLayer,
     LGeoJson,
-    LHeightgraph,
+    // LHeightgraph,
     LControlLayers,
     LLayerGroup,
     LMarker,
@@ -242,11 +243,11 @@ export default {
       let altitude = 0;
       const segments = [];
       if (this.waypoints.length === 0) {
-        altitude = await this.getAltitude([lng, lat]);
+        altitude = await getAltitude([lng, lat]);
         segments.push([lng, lat, altitude]);
       } else {
-        const directionSegments = await this.getSegmentsFor2pointsDirection(
-          this.waypoints[this.waypoints.length - 1].coordinates, coordinates,
+        const directionSegments = await getSegmentsFor2pointsDirection(
+          this.waypoints[this.waypoints.length - 1].coordinates, coordinates, this.profile,
         );
         segments.push(...directionSegments);
       }
@@ -266,9 +267,9 @@ export default {
       let diff = 0;
       let altitude = 0;
       if (this.waypoints.length === 0) {
-        altitude = await this.getAltitude([lng, lat]);
+        altitude = await getAltitude([lng, lat]);
       } else {
-        const lineCoords = await this.getLineAltitude(
+        const lineCoords = await getLineAltitude(
           [this.coordinates[this.coordinates.length - 1], [lng, lat]],
         );
         const [[,, alt1], [,, alt2]] = lineCoords;
@@ -295,115 +296,65 @@ export default {
         this.geojson = null;
       }
     },
-    async directions() {
-      if (this.waypoints.length >= 2) {
-        const Directions = new openrouteservice.Directions({
-          api_key: config.orsApiKey,
-        });
-        const options = {
-          coordinates: this.coordinates,
-          profile: this.profile,
-          format: 'geojson',
-          elevation: true,
-          extra_info: ['steepness'],
-        };
-        if (this.skipSegments.length > 0) {
-          options.skip_segments = this.skipSegments;
-        }
-        const result = await Directions.calculate(options);
-        if (result) {
-          // await this.$nextTick();
-          if (result.features && result.features[0]) {
-            const feature = result.features[0];
-            if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
-              const { coordinates } = feature.geometry;
-              const skippedPoints = this.waypoints.filter((e) => e.skip && e.altitude);
-              // console.log(skippedPoints);
-              // console.log(coordinates);
+    // async directions() {
+    //   if (this.waypoints.length >= 2) {
+    //     const Directions = new openrouteservice.Directions({
+    //       api_key: config.orsApiKey,
+    //     });
+    //     const options = {
+    //       coordinates: this.coordinates,
+    //       profile: this.profile,
+    //       format: 'geojson',
+    //       elevation: true,
+    //       extra_info: ['steepness'],
+    //     };
+    //     if (this.skipSegments.length > 0) {
+    //       options.skip_segments = this.skipSegments;
+    //     }
+    //     const result = await Directions.calculate(options);
+    //     if (result) {
+    //       // await this.$nextTick();
+    //       if (result.features && result.features[0]) {
+    //         const feature = result.features[0];
+    //         if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
+    //           const { coordinates } = feature.geometry;
+    //           const skippedPoints = this.waypoints.filter((e) => e.skip && e.altitude);
+    //           // console.log(skippedPoints);
+    //           // console.log(coordinates);
 
-              skippedPoints.forEach((skippedPoint) => {
-                const foundCoord = coordinates.find(
-                  (coordinate) => coordinate[0] === skippedPoint.coordinates[0]
-                  && coordinate[1] === skippedPoint.coordinates[1],
-                );
-                // console.log(foundCoord);
-                if (foundCoord) {
-                  foundCoord[2] = skippedPoint.altitude;
-                }
-              });
-            }
-            if (feature.properties) {
-              const prop = feature.properties;
-              this.ascent = prop.ascent;
-              this.descent = prop.descent;
-              if (prop.summary) {
-                this.distance = Math.round(prop.summary.distance / 10) / 100;
-                // this.duration = Math.round(prop.summary.duration / 60);
-              }
-              const skippedPoints = this.waypoints.filter((e) => e.skip && e.diff);
-              skippedPoints.forEach((skippedPoint) => {
-                if (skippedPoint.diff > 0) {
-                  this.ascent += skippedPoint.diff;
-                } else {
-                  this.descent -= skippedPoint.diff;
-                }
-              });
-            }
-          }
-          this.geojson = result;
-        }
-      }
-    },
-    async getSegmentsFor2pointsDirection(point1, point2) {
-      const Directions = new openrouteservice.Directions({
-        api_key: config.orsApiKey,
-      });
-      const options = {
-        coordinates: [point1, point2],
-        profile: this.profile,
-        format: 'geojson',
-        elevation: true,
-        extra_info: ['steepness'],
-      };
-      const result = await Directions.calculate(options);
-      if (result && result.features && result.features[0]) {
-        const feature = result.features[0];
-        if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
-          const { coordinates } = feature.geometry;
-          return coordinates;
-        }
-      }
-      return [];
-    },
-    async getAltitude(coordinates) {
-      const Elevation = new openrouteservice.Elevation({
-        api_key: config.orsApiKey,
-      });
-      const result = await Elevation.pointElevation({
-        format_in: 'point',
-        format_out: 'point',
-        geometry: coordinates,
-      });
-      if (result && result.geometry) {
-        const [,, altitude] = result.geometry;
-        return altitude || 0;
-      }
-      return 0;
-    },
-    async getLineAltitude(coordinates) {
-      const Elevation = new openrouteservice.Elevation({
-        api_key: config.orsApiKey,
-      });
-      const result = await Elevation.lineElevation({
-        format_in: 'polyline',
-        format_out: 'polyline',
-        geometry: coordinates,
-      });
-      if (result && result.geometry) {
-        return result.geometry;
-      }
-      return [];
-    },
+    //           skippedPoints.forEach((skippedPoint) => {
+    //             const foundCoord = coordinates.find(
+    //               (coordinate) => coordinate[0] === skippedPoint.coordinates[0]
+    //               && coordinate[1] === skippedPoint.coordinates[1],
+    //             );
+    //             // console.log(foundCoord);
+    //             if (foundCoord) {
+    //               foundCoord[2] = skippedPoint.altitude;
+    //             }
+    //           });
+    //         }
+    //         if (feature.properties) {
+    //           const prop = feature.properties;
+    //           this.ascent = prop.ascent;
+    //           this.descent = prop.descent;
+    //           if (prop.summary) {
+    //             this.distance = Math.round(prop.summary.distance / 10) / 100;
+    //             // this.duration = Math.round(prop.summary.duration / 60);
+    //           }
+    //           const skippedPoints = this.waypoints.filter((e) => e.skip && e.diff);
+    //           skippedPoints.forEach((skippedPoint) => {
+    //             if (skippedPoint.diff > 0) {
+    //               this.ascent += skippedPoint.diff;
+    //             } else {
+    //               this.descent -= skippedPoint.diff;
+    //             }
+    //           });
+    //         }
+    //       }
+    //       this.geojson = result;
+    //     }
+    //   }
+    // },
     toGpx() {
       const gpx = toGpx(this.geojson);
       const blob = new Blob([gpx]);
@@ -452,7 +403,7 @@ export default {
 
 <style scoped>
   @import "~leaflet/dist/leaflet.css";
-  @import "../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css";
+  /* @import "../../../vue2-leaflet-height-graph/dist/Vue2LeafletHeightGraph.css"; */
   .leaflet-grab {
     cursor: auto;
   }
