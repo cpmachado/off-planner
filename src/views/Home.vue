@@ -179,9 +179,6 @@ export default {
         // [-0.308218002319336, 42.92720562953708],
       ],
       // duration: null,
-      distance: null,
-      ascent: null,
-      descent: null,
       startIcon: L.icon({
         iconUrl: startIcon,
         iconAnchor: [4, 30],
@@ -228,6 +225,20 @@ export default {
       });
       return skip;
     },
+    distance() {
+      const distanceMeters = this.waypoints.map((e) => e.distance).reduce((a, b) => a + b, 0);
+      return Math.round(distanceMeters / 10) / 100;
+    },
+    ascent() {
+      return Math.round(
+        this.waypoints.map((e) => e.ascent).reduce((a, b) => a + b, 0),
+      );
+    },
+    descent() {
+      return Math.round(
+        this.waypoints.map((e) => e.descent).reduce((a, b) => a + b, 0),
+      );
+    },
   },
   methods: {
     // zoomUpdate(zoom) {
@@ -242,18 +253,25 @@ export default {
       const coordinates = [lng, lat];
       let altitude = 0;
       const segments = [];
+      let distance = 0;
+      let ascent = 0;
+      let descent = 0;
       if (this.waypoints.length === 0) {
         altitude = await getAltitude([lng, lat]);
         segments.push([lng, lat, altitude]);
       } else {
-        const directionSegments = await getSegmentsFor2pointsDirection(
+        const direction = await getSegmentsFor2pointsDirection(
           this.waypoints[this.waypoints.length - 1].coordinates, coordinates, this.profile,
         );
+        const directionSegments = direction.coordinates;
+        distance = direction.distance;
+        ascent = direction.ascent;
+        descent = direction.descent;
         segments.push(...directionSegments);
       }
       this.waypoints.push(
         {
-          coordinates, altitude, skip: false, segments,
+          coordinates, altitude, skip: false, segments, distance, ascent, descent,
         },
       );
 
@@ -276,9 +294,19 @@ export default {
         diff = alt2 - alt1;
         altitude = alt2;
       }
+      // TODO: calculate distance,
+      const distance = 0;
+      let ascent = 0;
+      let descent = 0;
+      if (diff > 0) {
+        ascent = diff;
+      } else {
+        descent = -diff;
+      }
+
       this.waypoints.push(
         {
-          coordinates: [lng, lat], skip: true, altitude, diff,
+          coordinates: [lng, lat], skip: true, altitude, diff, distance, ascent, descent,
         },
       );
       // await this.directions();
@@ -291,7 +319,8 @@ export default {
     async removeLastPoint() {
       this.waypoints.pop();
       if (this.waypoints.length >= 2) {
-        await this.directions();
+        // TODO: remove from geojson
+        // await this.directions();
       } else {
         this.geojson = null;
       }

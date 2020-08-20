@@ -32,11 +32,25 @@ async function getSegmentsFor2pointsDirection(point1, point2, profile = 'foot-hi
     extra_info: ['steepness'],
   };
   const result = await Directions.calculate(options);
+  // debugger;
   if (result && result.features && result.features[0]) {
     const feature = result.features[0];
+    const response = {
+      coordinates: [],
+      distance: 0,
+      ascent: 0,
+      descent: 0,
+    };
     if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
-      const { coordinates } = feature.geometry;
-      return coordinates;
+      response.coordinates = feature.geometry.coordinates;
+      if (feature.properties) {
+        response.ascent = feature.properties.ascent;
+        response.descent = feature.properties.descent;
+        if (feature.properties.summary) {
+          response.distance = feature.properties.summary.distance;
+        }
+      }
+      return response;
     }
   }
   return [];
