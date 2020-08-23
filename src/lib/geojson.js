@@ -121,4 +121,14 @@ function mergeGeoJsons(geoJson1, geoJson2) {
   return mergedGeoJson;
 }
 
-export { emptyGeoJson, addCoordinatesToGeoJson, mergeGeoJsons };
+function removeXLastCoordinates(geoJson, X) {
+  const modifiedGeoJson = geoJson;
+  const feature = modifiedGeoJson.features[0];
+  const coords = feature.geometry.coordinates;
+  feature.geometry.coordinates = coords.slice(0, coords.length - X);
+  return modifiedGeoJson;
+}
+
+export {
+  emptyGeoJson, addCoordinatesToGeoJson, mergeGeoJsons, removeXLastCoordinates,
+};

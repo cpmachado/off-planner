@@ -117,7 +117,7 @@ import {
 import startIcon from '@/assets/markers/start.png';
 import finishIcon from '@/assets/markers/finish.png';
 import circleIcon from '@/assets/markers/circle.png';
-import { emptyGeoJson, addCoordinatesToGeoJson } from '@/lib/geojson';
+import { emptyGeoJson, addCoordinatesToGeoJson, removeXLastCoordinates } from '@/lib/geojson';
 import {
   getCoordinatesFromLocation, getSegmentsFor2pointsDirection, getAltitude, getLineAltitude,
 } from '@/lib/ors';
@@ -303,24 +303,23 @@ export default {
       } else {
         descent = -diff;
       }
-
+      const segments = [[lng, lat, altitude]];
       this.waypoints.push(
         {
-          coordinates: [lng, lat], skip: true, altitude, diff, distance, ascent, descent,
+          coordinates: [lng, lat], altitude, skip: true, segments, distance, ascent, descent,
         },
       );
       // await this.directions();
       // this.addPointToGeoJson([lng, lat, alt2]);
       this.geojson = addCoordinatesToGeoJson(
-        this.geojson, [[lng, lat, altitude]],
+        this.geojson, segments,
       );
       return null;
     },
     async removeLastPoint() {
-      this.waypoints.pop();
+      const removed = this.waypoints.pop();
       if (this.waypoints.length >= 2) {
-        // TODO: remove from geojson
-        // await this.directions();
+        removeXLastCoordinates(this.geojson, removed.segments.length);
       } else {
         this.geojson = null;
       }
