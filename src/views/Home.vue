@@ -312,8 +312,6 @@ export default {
           coordinates: [lng, lat], altitude, skip: true, segments, distance, ascent, descent,
         },
       );
-      // await this.directions();
-      // this.addPointToGeoJson([lng, lat, alt2]);
       this.geojson = addCoordinatesToGeoJson(
         this.geojson, segments,
       );
@@ -324,68 +322,9 @@ export default {
       if (this.waypoints.length >= 2) {
         removeXLastCoordinates(this.geojson, removed.segments.length);
       } else {
-        this.geojson = null;
+        this.geojson = emptyGeoJson();
       }
     },
-    // async directions() {
-    //   if (this.waypoints.length >= 2) {
-    //     const Directions = new openrouteservice.Directions({
-    //       api_key: config.orsApiKey,
-    //     });
-    //     const options = {
-    //       coordinates: this.coordinates,
-    //       profile: this.profile,
-    //       format: 'geojson',
-    //       elevation: true,
-    //       extra_info: ['steepness'],
-    //     };
-    //     if (this.skipSegments.length > 0) {
-    //       options.skip_segments = this.skipSegments;
-    //     }
-    //     const result = await Directions.calculate(options);
-    //     if (result) {
-    //       // await this.$nextTick();
-    //       if (result.features && result.features[0]) {
-    //         const feature = result.features[0];
-    //         if (feature.geometry && Array.isArray(feature.geometry.coordinates)) {
-    //           const { coordinates } = feature.geometry;
-    //           const skippedPoints = this.waypoints.filter((e) => e.skip && e.altitude);
-    //           // console.log(skippedPoints);
-    //           // console.log(coordinates);
-
-    //           skippedPoints.forEach((skippedPoint) => {
-    //             const foundCoord = coordinates.find(
-    //               (coordinate) => coordinate[0] === skippedPoint.coordinates[0]
-    //               && coordinate[1] === skippedPoint.coordinates[1],
-    //             );
-    //             // console.log(foundCoord);
-    //             if (foundCoord) {
-    //               foundCoord[2] = skippedPoint.altitude;
-    //             }
-    //           });
-    //         }
-    //         if (feature.properties) {
-    //           const prop = feature.properties;
-    //           this.ascent = prop.ascent;
-    //           this.descent = prop.descent;
-    //           if (prop.summary) {
-    //             this.distance = Math.round(prop.summary.distance / 10) / 100;
-    //             // this.duration = Math.round(prop.summary.duration / 60);
-    //           }
-    //           const skippedPoints = this.waypoints.filter((e) => e.skip && e.diff);
-    //           skippedPoints.forEach((skippedPoint) => {
-    //             if (skippedPoint.diff > 0) {
-    //               this.ascent += skippedPoint.diff;
-    //             } else {
-    //               this.descent -= skippedPoint.diff;
-    //             }
-    //           });
-    //         }
-    //       }
-    //       this.geojson = result;
-    //     }
-    //   }
-    // },
     toGpx() {
       const gpx = toGpx(this.geojson);
       const blob = new Blob([gpx]);
