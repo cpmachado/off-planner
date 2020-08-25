@@ -121,6 +121,7 @@ import { emptyGeoJson, addCoordinatesToGeoJson, removeXLastCoordinates } from '@
 import {
   getCoordinatesFromLocation, getSegmentsFor2pointsDirection, getAltitude, getLineAltitude,
 } from '@/lib/ors';
+import calculateDistance from '@/lib/misc';
 
 import config from '../config.json';
 
@@ -284,18 +285,20 @@ export default {
       const lat = math.round(event.latlng.lat, 6);
       let diff = 0;
       let altitude = 0;
+      let distance = 0;
+
       if (this.waypoints.length === 0) {
         altitude = await getAltitude([lng, lat]);
       } else {
+        const [previousLng, previousLat] = this.coordinates[this.coordinates.length - 1];
         const lineCoords = await getLineAltitude(
-          [this.coordinates[this.coordinates.length - 1], [lng, lat]],
+          [[previousLng, previousLat], [lng, lat]],
         );
         const [[,, alt1], [,, alt2]] = lineCoords;
         diff = alt2 - alt1;
         altitude = alt2;
+        distance = calculateDistance(previousLat, previousLng, lat, lng);
       }
-      // TODO: calculate distance,
-      const distance = 0;
       let ascent = 0;
       let descent = 0;
       if (diff > 0) {
