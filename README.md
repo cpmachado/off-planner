@@ -11,6 +11,8 @@ git pull upstream master
 
 ## Project setup
 ```
+git clone git@github.com:niabb/off-planner.git
+cd off-planner
 npm ci
 ```
 ### Setup the config
