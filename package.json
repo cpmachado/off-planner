@@ -9,7 +9,7 @@
     "upgrade-dependencies": "npx npm-check-updates -u && npm i"
   },
   "dependencies": {
-    "axios": "0.19.2",
+    "axios": "0.20.0",
     "bootstrap": "4.5.2",
     "bootstrap-vue": "2.16.0",
     "core-js": "3.6.5",
@@ -18,7 +18,7 @@
     "leaflet": "1.6.0",
     "openrouteservice-js": "0.1.10",
     "togpx": "0.5.4",
-    "vue": "2.6.11",
+    "vue": "2.6.12",
     "vue-router": "3.4.3",
     "vue2-leaflet": "2.5.2",
     "vuex": "3.5.1"
@@ -32,6 +32,6 @@
     "eslint": "7.7.0",
     "eslint-plugin-import": "2.22.0",
     "eslint-plugin-vue": "6.2.2",
-    "vue-template-compiler": "2.6.11"
+    "vue-template-compiler": "2.6.12"
   }
 }
