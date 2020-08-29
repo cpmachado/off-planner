@@ -11,7 +11,7 @@ git pull upstream master
 
 ## Project setup
 ```
-npm install
+npm ci
 ```
 ### Setup the config
 Obtain an API key from Thunderforest and from Open Route Service, and enter them in the config file:
@@ -35,6 +35,3 @@ npm run build
 ```
 npm run lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
